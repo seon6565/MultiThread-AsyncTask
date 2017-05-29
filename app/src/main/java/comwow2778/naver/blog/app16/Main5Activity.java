@@ -14,9 +14,10 @@ public class Main5Activity extends AppCompatActivity {
     TextView tv1;
     ImageView iv1;
     myTask task;
-    int seconds = 1000;
-    int i = 0;
     int[] img = {R.drawable.banana, R.drawable.grape, R.drawable.kiwi, R.drawable.orange};
+    int count, seconds,index;
+    int startcount=0;
+    String[] imgname = {"바나나", "포도", "키위", "오렌지"};
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,68 +28,72 @@ public class Main5Activity extends AppCompatActivity {
         tv1 = (TextView)findViewById(R.id.texttime);
         iv1 = (ImageView)findViewById(R.id.imageView1);
 
+
         iv1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(task == null){
+                startcount++;
+                if(startcount%2 == 1){
                     task = new myTask();
                     task.execute(0);
                 }
                 else{
-                    //멈추는거
+                    task.cancel(true);
                 }
             }
         });
-    }
-    class CountTask extends AsyncTask<Integer,Integer,Void>{
-
-        @Override
-        protected Void doInBackground(Integer... params) {
-            return null;
-        }
     }
 
     class myTask extends AsyncTask<Integer,Integer,Void> {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            iv1.setImageResource(0);
+            index = 0;
             if(et1.getText().toString().equals("")){
-                seconds = 1000;
+                count = 1;
             }
             else {
-                seconds = Integer.valueOf(et1.getText().toString()) * 1000;
+                count = Integer.parseInt(et1.getText().toString());
             }
+            seconds = 0;
+            tv1.setVisibility(View.VISIBLE);
+            tv1.setText("시작부터 " + seconds + "초");
         }
 
 
         @Override
         protected Void doInBackground(Integer... params) {
-            for(i = 0; i<101; i++){
-                if(isCancelled() == true){
-                    return null;
-                }
+            while(isCancelled()==false){
+                seconds++;
                 try {
-                    Thread.sleep(seconds);
-                    publishProgress(i % 4);
+                    Thread.sleep(1000);
+                    if(seconds%count == 0){
+                        if(index>=3) {
+                            index = -1;
+                        }
+                        publishProgress(seconds, ++index);
+                    }
+                    else {
+                        publishProgress(seconds, index);
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
+            cancel(true);
             return null;
         }
 
         @Override
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
-            tv1.setText("시작 부터" + i +"초");
-            iv1.setImageResource(img[values[0]]);
+            tv1.setText("시작 부터" + values[0] +"초");
+            iv1.setImageResource(img[values[1]]);
 
         }
         @Override
         protected void onCancelled() {
-            iv1.setImageResource(R.drawable.play);
-            i = 0;
+            tv1.setText(imgname[index] + "선택" +"(" + seconds+" 초)");
             super.onCancelled();
         }
 
@@ -96,8 +101,6 @@ public class Main5Activity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            iv1.setImageResource(R.drawable.play);
-            tv1.setText("");
         }
 
     }
@@ -106,7 +109,11 @@ public class Main5Activity extends AppCompatActivity {
 
 
 
-    public void onClick(View v){
-        task.cancel(true);
+    public void onClick(View v) {
+        if (v.getId() == R.id.button3) {
+            iv1.setImageResource(R.drawable.play);
+            tv1.setVisibility(View.INVISIBLE);
+            et1.setText("");
+        }
     }
 }
